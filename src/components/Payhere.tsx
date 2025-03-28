@@ -14,28 +14,43 @@ declare global {
   }
 }
 
-// Function to generate the hash
-const generateHash = (
-  merchant_id: string,
-  order_id: string,
-  amount: string,
-  currency: string,
-  merchant_secret: string
-) => {
-  // Step 1: MD5 hash of the merchant_secret
-  const secretHash = md5(merchant_secret).toUpperCase();
-
-  // Step 2: Concatenate all required fields
-  const stringToHash = merchant_id + order_id + amount + currency + secretHash;
-
-  // Step 3: Final MD5 hash of the concatenated string and convert to uppercase
-  const finalHash = md5(stringToHash).toUpperCase();
-
-  return finalHash;
-};
-
 const PayHerePayment: React.FC = () => {
   const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  const merchant_id = process.env.NEXT_PUBLIC_PAYHERE_MERCHANT_ID;
+  const merchant_secret = process.env.NEXT_PUBLIC_PAYHERE_MERCHANT_SECRET;
+
+  // Ensure environment variables are defined
+  if (!merchant_id || !merchant_secret) {
+    throw new Error(
+      "Missing required PayHere environment variables: MERCHANT_ID or MERCHANT_SECRET"
+    );
+  }
+
+  const order_id = "ItemNo12345"; // Replace with your order ID
+  const amount = "1000.00"; // Replace with your amount
+  const currency = "LKR"; // Replace with your currency
+
+  // Function to generate the hash
+  const generateHash = (
+    merchant_id: string,
+    order_id: string,
+    amount: string,
+    currency: string,
+    merchant_secret: string
+  ) => {
+    // Step 1: MD5 hash of the merchant_secret
+    const secretHash = md5(merchant_secret).toUpperCase();
+
+    // Step 2: Concatenate all required fields
+    const stringToHash =
+      merchant_id + order_id + amount + currency + secretHash;
+
+    // Step 3: Final MD5 hash of the concatenated string and convert to uppercase
+    const finalHash = md5(stringToHash).toUpperCase();
+
+    return finalHash;
+  };
 
   useEffect(() => {
     // Load PayHere script dynamically
@@ -60,28 +75,22 @@ const PayHerePayment: React.FC = () => {
       return;
     }
 
-    const merchant_id = process.env.PAYHERE_MERCHANT_ID; // Replace with your Merchant ID
-    const order_id = "ItemNo12345"; // Replace with the order ID
-    const amount = "1000.00"; // Replace with the amount
-    const currency = "LKR"; // Replace with the currency
-    const merchant_secret = process.env.PAYHERE_MERCHANT_SECRET; // Replace with your merchant secret
-
     // Generate the hash
     const hash = generateHash(
-      merchant_id as string,
+      merchant_id,
       order_id,
       amount,
       currency,
-      merchant_secret as string
+      merchant_secret
     );
 
     // Payment object
     const payment = {
       sandbox: true, // Change to false in production
       merchant_id: merchant_id,
-      return_url: "http://localhost:3000/hello",
-      cancel_url: "http://localhost:3000/hello",
-      notify_url: "http://localhost:3000/api/payhere",
+      return_url: "http://localhost:3000/hello", // Change to your actual URL
+      cancel_url: "http://localhost:3000/hello", // Change to your actual URL
+      notify_url: "http://localhost:3000/api/payhere", // Change to your actual API URL
       order_id: order_id,
       items: "Door bell wireless",
       amount: amount,
