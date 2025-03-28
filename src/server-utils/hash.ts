@@ -13,7 +13,3 @@ export const generateServerHash = (
   const hash = md5(stringToHash).toUpperCase();
   return { hash, merchant_id };
 };
-
-export const sayHello = () => {
-  return "hello";
-};

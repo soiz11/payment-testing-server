@@ -46,6 +46,21 @@ export const handlePayHerePayment = async () => {
       return;
     }
 
+    // ✅ Register event handlers BEFORE starting payment
+    window.payhere.onCompleted = function (orderId: string) {
+      console.log("Payment Completed. Redirecting...");
+      window.location.href = "https://adahorana.lk/hello"; // ✅ Redirect manually
+    };
+
+    window.payhere.onDismissed = function () {
+      console.log("Payment Dismissed");
+      window.location.href = "https://adahorana.lk/hello";
+    };
+
+    window.payhere.onError = function (error: string) {
+      console.error("Payment Error:", error);
+    };
+
     // Request secure hash from the backend
     const response = await fetch("/api/payhere-hash", {
       method: "POST",
