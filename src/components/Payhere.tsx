@@ -28,7 +28,7 @@ const PayHerePayment: React.FC = () => {
   }
 
   const order_id = "ItemNo12345"; // Replace with your order ID
-  const amount = "1000.00"; // Replace with your amount
+  const amount = "100.00"; // Replace with your amount
   const currency = "LKR"; // Replace with your currency
 
   // Function to generate the hash
@@ -88,9 +88,9 @@ const PayHerePayment: React.FC = () => {
     const payment = {
       sandbox: true, // Change to false in production
       merchant_id: merchant_id,
-      return_url: "http://localhost:3000/hello", // Change to your actual URL
-      cancel_url: "http://localhost:3000/hello", // Change to your actual URL
-      notify_url: "http://localhost:3000/api/payhere", // Change to your actual API URL
+      return_url: "https://adahorana.lk/hello", // Change to your actual URL
+      cancel_url: "https://adahorana.lk/hello", // Change to your actual URL
+      notify_url: "https://adahorana.lk/api/payhere", // Change to your actual API URL
       order_id: order_id,
       items: "Door bell wireless",
       amount: amount,
