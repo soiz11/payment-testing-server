@@ -60,20 +60,19 @@ const PayHerePayment: React.FC = () => {
       return;
     }
 
-    const merchant_id = "1229941"; // Replace with your Merchant ID
+    const merchant_id = process.env.PAYHERE_MERCHANT_ID; // Replace with your Merchant ID
     const order_id = "ItemNo12345"; // Replace with the order ID
     const amount = "1000.00"; // Replace with the amount
     const currency = "LKR"; // Replace with the currency
-    const merchant_secret =
-      "MzEzNDUxMDE4MjM0NDIxOTEwNjIzNzQ1NDA0ODM0NzYzMzA2NTgz"; // Replace with your merchant secret
+    const merchant_secret = process.env.PAYHERE_MERCHANT_SECRET; // Replace with your merchant secret
 
     // Generate the hash
     const hash = generateHash(
-      merchant_id,
+      merchant_id as string,
       order_id,
       amount,
       currency,
-      merchant_secret
+      merchant_secret as string
     );
 
     // Payment object
