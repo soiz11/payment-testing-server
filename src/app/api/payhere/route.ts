@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import md5 from "md5"; // Import MD5 for checksum generation
 
-const MERCHANT_SECRET = "MzEzNDUxMDE4MjM0NDIxOTEwNjIzNzQ1NDA0ODM0NzYzMzA2NTgz"; // Load the merchant secret from env
+const MERCHANT_SECRET = process.env
+  .NEXT_PUBLIC_PAYHERE_MERCHANT_SECRET as string; // Load the merchant secret from env
 
 // POST handler for payment notification
 export async function POST(req: Request) {
