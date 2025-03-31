@@ -47,15 +47,15 @@ export const handlePayHerePayment = async () => {
     }
 
     // ✅ Register event handlers BEFORE starting payment
-    window.payhere.onCompleted = function (orderId: string) {
-      console.log("Payment Completed. Redirecting...");
-      window.location.href = "https://adahorana.lk/hello"; // ✅ Redirect manually
-    };
+    // window.payhere.onCompleted = function (orderId: string) {
+    //   console.log("Payment Completed. Redirecting...");
+    //   window.location.href = "https://adahorana.lk/hello"; // ✅ Redirect manually
+    // };
 
-    window.payhere.onDismissed = function () {
-      console.log("Payment Dismissed");
-      window.location.href = "https://adahorana.lk/hello";
-    };
+    // window.payhere.onDismissed = function () {
+    //   console.log("Payment Dismissed");
+    //   window.location.href = "https://adahorana.lk/cancel";
+    // };
 
     window.payhere.onError = function (error: string) {
       console.error("Payment Error:", error);
@@ -82,7 +82,7 @@ export const handlePayHerePayment = async () => {
       sandbox: true,
       merchant_id,
       return_url: "https://adahorana.lk/hello",
-      cancel_url: "https://adahorana.lk/hello",
+      cancel_url: "https://adahorana.lk/cancel",
       notify_url: "https://adahorana.lk/api/payhere",
       order_id,
       items: "Door bell wireless",

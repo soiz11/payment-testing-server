@@ -1,107 +1,94 @@
-import { NextResponse } from "next/server";
-import md5 from "md5";
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+//import { updateOrderStatus } from "@/server-utils/db"; // Database utility function
 
-const merchant_secret = process.env.PAYHERE_MERCHANT_SECRET as string;
+// Function to validate MD5 signature
+function verifySignature(
+  params: URLSearchParams,
+  merchant_secret: string
+): boolean {
+  const {
+    merchant_id,
+    order_id,
+    payment_id,
+    payhere_amount,
+    payhere_currency,
+    status_code,
+    md5sig,
+  } = Object.fromEntries(params);
 
-// POST handler for payment notification
-export async function POST(req: Request) {
+  if (!md5sig) return false;
+
+  const hashString = `${merchant_id}${order_id}${payment_id}${payhere_amount}${payhere_currency}${status_code}${crypto
+    .createHash("md5")
+    .update(merchant_secret)
+    .digest("hex")}`;
+  const calculatedSignature = crypto
+    .createHash("md5")
+    .update(hashString)
+    .digest("hex");
+
+  return calculatedSignature === md5sig;
+}
+
+// POST handler for PayHere payment notifications
+export async function POST(req: NextRequest) {
   try {
-    // Fix: Parse `application/x-www-form-urlencoded` request properly
-    const bodyText = await req.text(); // Read raw text data
-    const params = new URLSearchParams(bodyText); // Convert to key-value pairs
+    const bodyText = await req.text();
+    const params = new URLSearchParams(bodyText);
 
-    const merchant_id = params.get("merchant_id") ?? "";
-    const order_id = params.get("order_id") ?? "";
-    const payment_id = params.get("payment_id") ?? "";
-    const payhere_amount = params.get("payhere_amount") ?? "";
-    const payhere_currency = params.get("payhere_currency") ?? "";
-    const status_code = Number(params.get("status_code") ?? ""); // Convert to number
-    const md5sig = params.get("md5sig") ?? "";
-    const method = params.get("method") ?? "";
-    const status_message = params.get("status_message") ?? "";
-    const card_holder_name = params.get("card_holder_name") ?? "";
-    const card_no = params.get("card_no") ?? "";
-    const card_expiry = params.get("card_expiry") ?? "";
+    // Extract required fields
+    const order_id = params.get("order_id");
+    const status_code = params.get("status_code");
+    const merchant_secret = process.env.PAYHERE_MERCHANT_SECRET;
 
-    // Step 1: Generate the MD5 checksum for validation
-    const generatedMd5sig = generateMd5sig(
-      merchant_id,
-      order_id,
-      payhere_amount,
-      payhere_currency,
-      status_code,
-      merchant_secret
-    );
-
-    // Step 2: Validate the checksum
-    if (generatedMd5sig !== md5sig) {
-      console.error("❌ Checksum verification failed");
+    if (!order_id || !status_code || !merchant_secret) {
       return NextResponse.json(
-        { message: "Invalid signature" },
+        { message: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Step 3: Process the payment based on the status code
-    switch (status_code) {
-      case 2: // Success
-        console.log(`✅ Payment Success: OrderID: ${order_id}`);
-        await updatePaymentStatus(order_id, "Success");
-        break;
-      case 0: // Pending
-        console.log(`⏳ Payment Pending: OrderID: ${order_id}`);
-        await updatePaymentStatus(order_id, "Pending");
-        break;
-      case -1: // Canceled
-        console.log(`🚫 Payment Canceled: OrderID: ${order_id}`);
-        await updatePaymentStatus(order_id, "Canceled");
-        break;
-      case -2: // Failed
-        console.log(`❌ Payment Failed: OrderID: ${order_id}`);
-        await updatePaymentStatus(order_id, "Failed");
-        break;
-      case -3: // Chargeback
-        console.log(`⚠️ Chargeback: OrderID: ${order_id}`);
-        await updatePaymentStatus(order_id, "Chargeback");
-        break;
-      default:
-        console.log(`❓ Unknown Payment Status: ${status_code}`);
-        return NextResponse.json(
-          { message: "Unknown Status" },
-          { status: 400 }
-        );
+    // Verify payment signature
+    if (!verifySignature(params, merchant_secret)) {
+      return NextResponse.json(
+        { message: "Invalid signature" },
+        { status: 403 }
+      );
     }
 
-    // Step 4: Send the response back indicating success
+    // Determine payment status
+    let paymentStatus = "pending";
+    switch (status_code) {
+      case "2":
+        paymentStatus = "success";
+        break;
+      case "0":
+        paymentStatus = "pending";
+        break;
+      case "-1":
+        paymentStatus = "canceled";
+        break;
+      case "-2":
+        paymentStatus = "failed";
+        break;
+      case "-3":
+        paymentStatus = "chargedback";
+        break;
+    }
+
+    // Update database with payment status
+    // await updateOrderStatus(order_id, paymentStatus);
+
     return NextResponse.json(
-      { message: "Payment Status Processed" },
+      { message: `Payment notification received:${paymentStatus}` },
       { status: 200 }
     );
   } catch (error) {
-    console.error("❌ Error processing payment notification:", error);
+    console.error("Error processing payment notification:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
     );
   }
 }
-
-// Helper function to generate the MD5 checksum for validation
-const generateMd5sig = (
-  merchant_id: string,
-  order_id: string,
-  amount: string,
-  currency: string,
-  status_code: number,
-  merchant_secret: string
-) => {
-  const secretHash = md5(merchant_secret).toUpperCase();
-  const stringToHash = `${merchant_id}${order_id}${amount}${currency}${status_code}${secretHash}`;
-  return md5(stringToHash).toUpperCase();
-};
-
-// Helper function to update the payment status (mock example)
-const updatePaymentStatus = async (order_id: string, status: string) => {
-  console.log(`🔄 Updating payment status for Order ${order_id} to ${status}`);
-  // Example: await yourDatabase.updateOrderStatus(order_id, status);
-};
