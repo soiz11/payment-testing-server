@@ -1,5 +1,4 @@
 "use client";
-import md5 from "md5"; // Import MD5 hashing library
 
 declare global {
   interface Window {
@@ -47,15 +46,15 @@ export const handlePayHerePayment = async () => {
     }
 
     // ✅ Register event handlers BEFORE starting payment
-    // window.payhere.onCompleted = function (orderId: string) {
-    //   console.log("Payment Completed. Redirecting...");
-    //   window.location.href = "https://adahorana.lk/hello"; // ✅ Redirect manually
-    // };
+    window.payhere.onCompleted = function (orderId: string) {
+      console.log("Payment Completed. Redirecting...");
+      window.location.href = "https://adahorana.lk/hello"; // ✅ Redirect manually
+    };
 
-    // window.payhere.onDismissed = function () {
-    //   console.log("Payment Dismissed");
-    //   window.location.href = "https://adahorana.lk/cancel";
-    // };
+    window.payhere.onDismissed = function () {
+      console.log("Payment Dismissed");
+      window.location.href = "https://adahorana.lk/cancel";
+    };
 
     window.payhere.onError = function (error: string) {
       console.error("Payment Error:", error);
